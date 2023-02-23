@@ -66,4 +66,4 @@ if __name__ == '__main__':
     # area(img)
     # main(img)
     # shapes_1(img)
-    pic_operations()
+    # pic_operations()

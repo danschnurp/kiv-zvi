@@ -68,7 +68,7 @@ def getContour(img):
 
 if __name__ == "__main__":
     print("Contour detection (inner border)")
-    img = cv2.bitwise_not(cv2.imread("dvojka.png", cv2.IMREAD_GRAYSCALE))
+    img = cv2.bitwise_not(cv2.imread("../images/dvojka.png", cv2.IMREAD_GRAYSCALE))
 
     contour = getContour(img)
     print(contour.shape)

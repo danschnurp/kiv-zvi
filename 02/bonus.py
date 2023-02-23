@@ -7,9 +7,14 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 
+from config.cfg import path_to_images
+
+dog = path_to_images + 'dog.jpg'
+example = path_to_images + 'example.png'
+
 
 def bonus2():
-    img = cv.imread('example.png', cv.IMREAD_COLOR)
+    img = cv.imread(example, cv.IMREAD_COLOR)
     print(img.shape)
     print(img.dtype)
     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -27,7 +32,7 @@ def bonus2():
 
 
 def bonus():
-    img = cv.imread('dog.jpg', cv.IMREAD_COLOR)
+    img = cv.imread(dog, cv.IMREAD_COLOR)
     print(img.shape)
     print(img.dtype)
 
@@ -39,7 +44,7 @@ def bonus():
 
 
 def prahovani():
-    img = cv.imread('dog.jpg', cv.IMREAD_GRAYSCALE)
+    img = cv.imread(dog, cv.IMREAD_GRAYSCALE)
     print(img.shape)
     print(img.dtype)
     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
@@ -52,12 +57,12 @@ def prahovani():
 
 
 def main():
-    img = cv.imread('dog.jpg', cv.IMREAD_COLOR)
+    img = cv.imread(dog, cv.IMREAD_COLOR)
     print(img.shape)
     print(img.dtype)
     img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     r, g, b = cv.split(img)
-    r = img[50:400, 300:1000, :]
+    r = img[50:400, 50:100, :]
     plt.imshow(r)
     plt.show()
     # cv.imwrite("dogo2.jpg", r)
@@ -65,5 +70,6 @@ def main():
 
 
 if __name__ == '__main__':
-    bonus()
-    bonus2()
+    main()
+    # bonus()
+    # bonus2()
