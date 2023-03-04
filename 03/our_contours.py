@@ -94,13 +94,10 @@ def get_4_neighbourhood(first_x: int, second_x: int, first_y: int, second_y: int
         return 4
 
 
-def compute_freeman_chaincode(contours: np.ndarray):
-    shifted = np.roll(contours, -1, axis=0)
-
-    result = np.zeros(shifted.shape[0])
-    result = np.array([get_4_neighbourhood(x1, x2, y1, y2)
-                       for x1, x2, y1, y2 in zip(contours[:, 0], shifted[:, 0], contours[:, 1], shifted[:, 1])])
-    return
+def compute_freeman_chaincode_4_neighbourhood(contours: np.ndarray):
+    shifted = np.roll(contours, 1, axis=0)
+    return np.array([get_4_neighbourhood(x1, x2, y1, y2)
+                     for x1, x2, y1, y2 in zip(contours[:, 0], shifted[:, 0], contours[:, 1], shifted[:, 1])])
 
 
 if __name__ == "__main__":
@@ -111,7 +108,9 @@ if __name__ == "__main__":
     contour = contour[1]
     print(contour.shape)
 
-    freeman_code = compute_freeman_chaincode(np.squeeze(contour))
+    freeman_code = compute_freeman_chaincode_4_neighbourhood(np.squeeze(contour))
+    plt.plot(np.arange(len(freeman_code)), freeman_code)
+    plt.show()
 
     x, y, w, h = cv2.boundingRect(contour)
 
@@ -120,6 +119,3 @@ if __name__ == "__main__":
     rect = cv2.minAreaRect(contour)
     box = cv2.boxPoints(rect)
     show_image_now(cv2.drawContours(img, [np.squeeze(np.array(box, dtype=int))], 0, 100, 2))
-    # print("area", cv2.contourArea(contour))
-    # tmp = area(contour)
-    # print(tmp)
