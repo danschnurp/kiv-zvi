@@ -75,23 +75,51 @@ def area(cont):
     return 0.5 * np.sum((shift1(cont[:, 0]) - cont[:, 0]) * (cont[:, 1] + shift1(cont[:, 1])).T)
 
 
-if __name__ == "__main__":
-    img = cv2.bitwise_not(cv2.imread(path_to_images() + "nula.png", cv2.IMREAD_GRAYSCALE))
-    plt.imshow(img)
+def show_image_now(image: np.ndarray, cmap="gray"):
+    plt.imshow(image, cmap=cmap)
     plt.show()
 
-    contour = cv2.findContours(img, 1, 2)
+
+def get_4_neighbourhood(first_x: int, second_x: int, first_y: int, second_y: int) -> int:
+    if first_x < second_x:
+        return 0
+
+    if first_y < second_y:
+        return 6
+
+    if first_y > second_y:
+        return 2
+
+    if first_x > second_x:
+        return 4
+
+
+def compute_freeman_chaincode(contours: np.ndarray):
+    shifted = np.roll(contours, -1, axis=0)
+
+    result = np.zeros(shifted.shape[0])
+    result = np.array([get_4_neighbourhood(x1, x2, y1, y2)
+                       for x1, x2, y1, y2 in zip(contours[:, 0], shifted[:, 0], contours[:, 1], shifted[:, 1])])
+    return
+
+
+if __name__ == "__main__":
+    img = cv2.bitwise_not(cv2.imread(path_to_images() + "nula.png", cv2.IMREAD_GRAYSCALE))
+
+    show_image_now(img)
+    contour, _ = cv2.findContours(img, 1, 2)
+    contour = contour[1]
     print(contour.shape)
+
+    freeman_code = compute_freeman_chaincode(np.squeeze(contour))
 
     x, y, w, h = cv2.boundingRect(contour)
 
-    plt.imshow(cv2.rectangle(img, (x, y), (x + w, y + h), 128, 2))
-    plt.show()
+    show_image_now(cv2.rectangle(img, (x, y), (x + w, y + h), 128, 2))
 
     rect = cv2.minAreaRect(contour)
     box = cv2.boxPoints(rect)
-    plt.imshow(cv2.drawContours(img, [np.squeeze(np.array(box, dtype=int))], 0, 100, 2))
-    plt.show()
+    show_image_now(cv2.drawContours(img, [np.squeeze(np.array(box, dtype=int))], 0, 100, 2))
     # print("area", cv2.contourArea(contour))
     # tmp = area(contour)
     # print(tmp)
