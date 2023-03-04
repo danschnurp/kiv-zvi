@@ -1,5 +1,13 @@
 import os
 
+import numpy as np
+from matplotlib import pyplot as plt
+
+
+def show_image_now(image: np.ndarray, cmap="gray"):
+    plt.imshow(image, cmap=cmap)
+    plt.show()
+
 
 def path_to_images(output_filename="images", output_dir="../") -> str:
     """

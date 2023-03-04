@@ -6,7 +6,7 @@ scripty pro predmet ZVI
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-from config import path_to_images
+from utils import path_to_images
 
 dog = path_to_images() + 'dog.jpg'
 example = path_to_images() + 'example.png'

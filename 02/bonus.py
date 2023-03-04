@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from config import path_to_images
+from utils import path_to_images
 
 
 def create_representation(img):

@@ -2,7 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-from config import path_to_images
+from utils import path_to_images
 
 
 def normalize(X):
