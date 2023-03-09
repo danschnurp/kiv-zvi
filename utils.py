@@ -1,7 +1,14 @@
 import os
 
+import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+
+
+def load_image_cv2(image_path: str) -> np.ndarray:
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    assert img is not None, "file could not be read..."
+    return img
 
 
 def show_image_now(image: np.ndarray, cmap="gray"):
