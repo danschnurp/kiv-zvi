@@ -2,25 +2,65 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-input_name = "UAZK-B2-a-04-C-1425-002.JPG"
+import argparse
 
+parser = argparse.ArgumentParser(description='neco')
+parser.add_argument('-i', '--picture',
+                    help='no...',
+                    )
+
+args = parser.parse_args()
+
+# A command line argument.
+input_name = args.picture
+
+# It reads the image from the file and converts it to grayscale.
 img = (cv2.imread("./data_katastr/" + input_name, cv2.IMREAD_GRAYSCALE))
 
 assert img is not None, "file could not be read, check with os.path.exists()"
 
+# A Canny edge detector.
 edges = cv2.Canny(img, 1, 500)
-plt.imshow(edges, cmap='gray')
+
+# Create default parametrization LSD
+lsd = cv2.createLineSegmentDetector(0)
+
+# Detect lines in the image
+lines = lsd.detect(img)[0]  # Position 0 of the returned tuple are the detected lines
+print(lines.shape)
+
+# It creates a white image with the same size as the input image.
+white = np.zeros_like(img)
+white[:] = 255
+
+# Draw detected lines in the image
+drawn_img = lsd.drawSegments(white, lines)
+# It converts the image from BGR to grayscale.
+drawn_img = cv2.cvtColor(drawn_img, cv2.COLOR_BGR2GRAY)
+
+# Taking the right 90% of the image.
+right_border = int(drawn_img.shape[1] * 0.9)
+# Taking the left 10% of the image.
+left_border = int(drawn_img.shape[1] * 0.1)
+# Taking the bottom 90% of the image.
+bottom_border = int(drawn_img.shape[0] * 0.9)
+# Taking the top 10% of the image.
+top_border = int(drawn_img.shape[0] * 0.1)
+
+# Taking the right, left, bottom and top border of the image.
+right_border = drawn_img[:, right_border:]
+left_border = drawn_img[:, :left_border]
+bottom_border = drawn_img[bottom_border:, :]
+top_border = drawn_img[:top_border, :]
 
 
-# cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-# circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 20,
-#                            param1=50, param2=30, minRadius=0, maxRadius=0)
-# circles = np.uint16(np.around(circles))
-# for i in circles[0, :]:
-#     # draw the outer circle
-#     cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
-#     # draw the center of the circle
-#     cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
-# cv2.imshow('detected circles', cimg)
-
+# Showing the image.
+plt.imshow(right_border, cmap='gray')
 plt.show()
+plt.imshow(left_border, cmap='gray')
+plt.show()
+plt.imshow(bottom_border, cmap='gray')
+plt.show()
+plt.imshow(top_border, cmap='gray')
+plt.show()
+
