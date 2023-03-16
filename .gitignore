@@ -131,3 +131,5 @@ dmypy.json
 dvojka.png
 .vscode/
 data_katastr/
+.idea/
+__MACOSX/
