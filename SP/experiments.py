@@ -3,11 +3,25 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from skimage.filters import (threshold_otsu, threshold_niblack,threshold_sauvola)
 
 # %%
 
 # A command line argument.
 input_name = "UAZK-B2-a-04-C-1425-006.JPG"
+
+# It reads the image from the file.
+img = (cv2.imread("C:/Users/dartixus/PycharmProjects/kiv-zvi/SP/data_katastr/UAZK-B2-a-04-C-1425-002.JPG", cv2.IMREAD_GRAYSCALE))
+
+assert img is not None, "file could not be read, check with os.path.exists()"
+# A Canny edge detector.
+# img = cv2.Canny(img, 1, 500)
+# Creating the kernel(2d convolution matrix)
+img = threshold_sauvola(img, window_size=9, k=0.9)
+
+plt.imshow(img, cmap="gray")
+plt.show()
+exit(0)
 
 # It reads the image from the file and converts it to grayscale.
 img = (cv2.imread("./data_katastr/" + input_name, cv2.IMREAD_GRAYSCALE))
