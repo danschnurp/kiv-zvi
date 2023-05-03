@@ -129,11 +129,16 @@ def get_sizes_procentual(procentual: float):
 ### cropping image by 1% from each side
 """
 
+
 # %%
-right_border, left_border, bottom_border, top_border = get_sizes_procentual(0.01)
-print(bottom_border, top_border, right_border, left_border)
-print(img.shape)
-img = img[bottom_border:top_border, right_border:left_border]
+def crop_one_percent(img_to_crop):
+    right_border_to_crop, left_border_to_crop, bottom_border_to_crop, top_border_to_crop = get_sizes_procentual(0.01)
+    print(bottom_border_to_crop, top_border_to_crop, right_border_to_crop, left_border_to_crop)
+    print(img_to_crop.shape)
+    return img_to_crop[bottom_border_to_crop:top_border_to_crop, right_border_to_crop:left_border_to_crop]
+
+
+img = crop_one_percent(img)
 
 # plt.imshow(img, cmap="gray")
 
@@ -183,16 +188,7 @@ def get_vertical(x1, x2, y1, y2, theta=2, min_value=800):
 
 
 # def connect_lines(x1, x2, y1, y2, theta=2, min_value=200):
-#     """
-#     computes if is line vertical or horisontal like by parameters theta as and min_value
-#     """
-#
-#     if np.abs(x1 - x2) < theta and np.abs(y1 - y2) > min_value:
-#         return "vertical"
-#     elif np.abs(y1 - y2) < theta and np.abs(x1 - x2) > min_value:
-#         return "horizontal"
-#     else:
-#         return "other"
+#     pass
 
 
 # %%
@@ -211,9 +207,9 @@ def hough(border):
     #  Detecting lines in the image with probabilistic_hough_line transform
     lines = probabilistic_hough_line(border, threshold=10, line_length=5,
                                      line_gap=3)
-    for line in lines:
-        p0, p1 = line
-        # plt.plot((p0[0], p1[0]), (p0[1], p1[1]), color="black")
+    # for line in lines:
+    #     p0, p1 = line
+    # plt.plot((p0[0], p1[0]), (p0[1], p1[1]), color="black")
 
     # plt.show()
     lines = [[i[0], i[1], j[0], j[1]] for i, j in lines]
@@ -222,7 +218,10 @@ def hough(border):
     return lines
 
 
-def plot_border_line(longest_lines, border):
+def plot_border_line(longest_lines, border, original_img):
+
+    # todo compose img back with red highlights
+
     # Draw detected lines in the image
     for line_to_draw in longest_lines:
         border = cv2.line(border, (line_to_draw[0], line_to_draw[1]), (line_to_draw[2], line_to_draw[3]), (0))
@@ -236,7 +235,7 @@ def plot_border_line(longest_lines, border):
 # %%
 
 
-def make_line_detection(border, detection_method, img_shape, horizontal_only=True, vertical_only=False):
+def make_line_detection(border, detection_method, img_shape, original_img, horizontal_only=True, vertical_only=False):
     if horizontal_only:
         for _ in range(9):
             border = convolve_horizontal_lightly(border)
@@ -281,19 +280,25 @@ def make_line_detection(border, detection_method, img_shape, horizontal_only=Tru
 
     border[:, :] = 255
 
-    return plot_border_line(longest_lines=longest_lines, border=border)
+    return plot_border_line(longest_lines=longest_lines, border=border, original_img=original_img)
 
 
 # %%
-right_border_line = make_line_detection(right_border, hough, horizontal_only=False, vertical_only=True, img_shape=img.shape)
+
+original_img = load_colored()
+original_img = crop_one_percent(original_img)
 
 # %%
-left_border_line = make_line_detection(left_border, hough, horizontal_only=False, vertical_only=True, img_shape=img.shape)
+make_line_detection(right_border, hough, horizontal_only=False, vertical_only=True,
+                    img_shape=img.shape, original_img=original_img)
 
 # %%
-top_border_line = make_line_detection(top_border, hough, horizontal_only=True, vertical_only=False, img_shape=img.shape)
+make_line_detection(left_border, hough, horizontal_only=False, vertical_only=True,
+                    img_shape=img.shape, original_img=original_img)
 
 # %%
-bottom_border_line = make_line_detection(bottom_border, hough, horizontal_only=True, img_shape=img.shape)
+make_line_detection(top_border, hough, horizontal_only=True, vertical_only=False, img_shape=img.shape,
+                    original_img=original_img)
 
-
+# %%
+make_line_detection(bottom_border, hough, horizontal_only=True, img_shape=img.shape, original_img=original_img)
