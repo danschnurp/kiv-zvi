@@ -11,12 +11,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='historical map border detection')
     parser.add_argument('-i', '--input_directory_path',
                         required=True)
-    parser = argparse.ArgumentParser(description='historical map border detection')
     parser.add_argument('-o', '--output_directory_path',
                         required=True)
-    parser.add_argument('-o', '--min_longest_liner_means_percentile',
+    parser.add_argument('--min_longest_liner_means_percentile',
                         default=95, type=int)
-    parser.add_argument('-o', '--min_longest_liner_extremes_percentile',
+    parser.add_argument('--min_longest_liner_extremes_percentile',
                         default=30, type=int)
     args = parser.parse_args()
 

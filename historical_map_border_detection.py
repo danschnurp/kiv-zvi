@@ -278,4 +278,4 @@ def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_p
 
     if out_dir_path[-1] != "/" or out_dir_path[-2] != '"\\':
         out_dir_path += "/"
-    cv2.imwrite(out_dir_path + "annotated_katastr/" +  image_name, cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    cv2.imwrite(out_dir_path + image_name, cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
