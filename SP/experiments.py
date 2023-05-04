@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from skimage.filters import threshold_sauvola
 from skimage.transform import probabilistic_hough_line
 
 
@@ -139,7 +140,7 @@ def make_line_detection(border, detection_method, img_shape, horizontal_only=Tru
 
     distances = np.array([euclidean_2D(i[0], i[2], i[1], i[3], ) for i in lines])
 
-    longest_lines_for_means = lines[distances > np.percentile(distances, 100)].T
+    longest_lines_for_means = lines[distances > np.percentile(distances, 95)].T
     longest_lines = lines[distances > np.percentile(distances, 30)].T
 
     if horizontal_only:
@@ -177,27 +178,22 @@ def make_line_detection(border, detection_method, img_shape, horizontal_only=Tru
 
 
 def main(image_name, input_picture_path):
-    img = load_BW(input_picture_path)
+    img = load_colored(input_picture_path).T[2].T
 
     assert img is not None, "file could not be read, check with os.path.exists()"
 
     # plt.imshow(img, cmap="gray")
     # plt.show()
 
-    ret, thresh1 = cv2.threshold(img, 100, 155, cv2.THRESH_OTSU)
+    ret, thresh1 = cv2.threshold(img, 150, 230, cv2.THRESH_OTSU)
 
     # plt.imshow(thresh1, cmap="gray")
     img = thresh1
 
-    # sauvola = (cv2.imread(input_name, cv2.IMREAD_GRAYSCALE))
-    # assert img is not None, "file could not be read, check with os.path.exists()"
-    # sauvola = threshold_sauvola(img, window_size=5, k=0.1)
-
-    # plt.imshow(sauvola, cmap="gray")
-    # img = sauvola
 
     img = crop_one_percent(img)
-
+    # cv2.imwrite("./annotated_katastr/" + image_name, cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    # return
     # plt.imshow(img, cmap="gray")
 
     right_border, left_border, bottom_border, top_border = get_borders_x_percent(img)
