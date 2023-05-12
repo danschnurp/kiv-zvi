@@ -15,7 +15,7 @@ def load_BW(input_picture_path):
 
 # It reads the image from the file.
 def load_colored(input_picture_path):
-    return cv2.cvtColor((cv2.imread(input_picture_path, cv2.COLOR_BGR2RGB)), cv2.COLOR_BGR2RGB)
+    return cv2.cvtColor(cv2.imread(input_picture_path), cv2.COLOR_BGR2RGB)
 
 
 def convolve_horizontal_lightly(img):
@@ -224,8 +224,8 @@ def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_p
 
     assert img is not None, "file could not be read, check with os.path.exists()"
 
-    # apply THRESH_OTSU
-    ret, thresh1 = cv2.threshold(img, 150, 230, cv2.THRESH_OTSU)
+    # apply THRESH_OTSU todo bug
+    ret, thresh1 = cv2.threshold(img, 150, 230, cv2.THRESH_BINARY)
 
     # plt.imshow(thresh1, cmap="gray")
 
