@@ -1,11 +1,13 @@
 #  date: 4. 5. 2023
 #  author: Daniel Schnurpfeil
 #
+from copy import copy
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from skimage.filters import threshold_sauvola
-from skimage.transform import probabilistic_hough_line
+from skimage.transform import probabilistic_hough_line, hough_line, hough_line_peaks
 
 
 # It reads the image from the file.
@@ -63,7 +65,7 @@ def crop_one_percent(img_to_crop):
     :param img_to_crop: The input image that needs to be cropped
     """
     right_border_to_crop, left_border_to_crop, bottom_border_to_crop, top_border_to_crop = get_sizes_percentual(0.01,
-                                                                                                            img_to_crop)
+                                                                                                                img_to_crop)
     # print(bottom_border_to_crop, top_border_to_crop, right_border_to_crop, left_border_to_crop)
     # print(img_to_crop.shape)
     return img_to_crop[bottom_border_to_crop:top_border_to_crop, right_border_to_crop:left_border_to_crop]
@@ -128,6 +130,44 @@ def hough(border):
     return lines
 
 
+def hough_classic(border, horizontal=2):
+    #  Detecting lines in the image with Classic straight-line Hough transform
+    # todo in progress
+    if horizontal == 2:
+        tested_angles = np.linspace(89, 91, 10, endpoint=False)
+        x0 = 0
+        x1 = border.shape[horizontal - 1]
+    else:
+        tested_angles = np.linspace(179, 181, 10, endpoint=False)
+        x0 = border.shape[horizontal - 1]
+        x1 = 0
+    if border.shape[0] < border.shape[1]:
+        border = border.T
+    h, theta, d = hough_line(border, theta=tested_angles)
+    lines = []
+    for _, angle, dist in zip(*hough_line_peaks(h, theta, d)):
+        y0 = (dist - x0 * np.cos(angle)) / np.sin(angle)
+        y1 = (dist - x1 * np.cos(angle)) / np.sin(angle)
+        lines.append([x0, y0, x1, y1])
+
+    lines = np.array(lines, dtype=np.int16)
+    lines = np.abs(lines)
+    return lines
+
+
+def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
+    m1 = (y2 - y1) / (x2 - x1)
+    m2 = (y4 - y3) / (x4 - x3)
+
+    b1 = y1 - m1 * x1
+    b2 = y3 - m2 * x3
+
+    x_intersect = (b2 - b1) / (m1 - m2)
+    y_intersect = m1 * x_intersect + b1
+
+    return int(abs(x_intersect)), int(abs(y_intersect))
+
+
 def plot_border_line(longest_lines, border):
     """
     The function takes in the longest lines and a border and plots a border line to picture
@@ -137,6 +177,17 @@ def plot_border_line(longest_lines, border):
         border = cv2.line(border, (line_to_draw[0], line_to_draw[1]), (line_to_draw[2], line_to_draw[3]), (255, 0, 0),
                           thickness=10)
 
+    return border
+
+
+def plot_intersect(line_to_draw, line_to_draw2, border):
+    intersect = intersection(
+        line_to_draw2[0], line_to_draw2[2], line_to_draw2[1], line_to_draw2[3],
+        line_to_draw[0], line_to_draw[2], line_to_draw[1], line_to_draw[3],
+                             )
+    if not np.isnan(intersect[0]):
+        print("plot_intersect", intersect)
+        border = cv2.circle(border, intersect, 50, (0, 255, 0), thickness=20)
     return border
 
 
@@ -174,7 +225,15 @@ def make_line_detection(border, detection_method, img_shape, horizontal_only=Tru
             border = convolve_vertical_lightly(border)
         # setting min line length as 1/8 of side length
         min_value = img_shape[0] // 8
-    lines = detection_method(border)
+
+    if detection_method == hough_classic:
+        if horizontal_only:
+            horizontal = 2
+        else:
+            horizontal = 1
+        return detection_method(border, horizontal)
+    else:
+        lines = detection_method(border)
 
     directions = np.array([get_vertical(i[0], i[2], i[1], i[3], min_value=min_value) for i in lines])
     vertical = lines[directions == "vertical", :]
@@ -218,14 +277,15 @@ def make_line_detection(border, detection_method, img_shape, horizontal_only=Tru
 
 
 def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_percentile=95,
-         min_longest_liner_extremes_percentile=30):
-    # loading a colored image from the specified file path and then extracting the third channel (blue channel)
-    img = load_colored(input_picture_path).T[2].T
+         detect_method=hough, min_longest_liner_extremes_percentile=30):
+    # loading a colored image from the specified file path
+    img = load_colored(input_picture_path)
+    # extracting the third channel (blue channel)
+    img = img[:, :, 2]
 
     assert img is not None, "file could not be read, check with os.path.exists()"
 
-    # apply THRESH_OTSU todo bug
-    ret, thresh1 = cv2.threshold(img, 150, 230, cv2.THRESH_BINARY)
+    ret, thresh1 = cv2.threshold(img, 150, 230, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # plt.imshow(thresh1, cmap="gray")
 
@@ -246,17 +306,17 @@ def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_p
     print(top_border.shape)
 
     lines = [
-        make_line_detection(top_border, hough, horizontal_only=True, img_shape=img.shape,
+        make_line_detection(top_border, detect_method, horizontal_only=True, img_shape=img.shape,
                             min_longest_liner_means_percentile=min_longest_liner_means_percentile,
                             min_longest_liner_extremes_percentile=min_longest_liner_extremes_percentile),
-        make_line_detection(bottom_border, hough, horizontal_only=True, img_shape=img.shape,
+        make_line_detection(bottom_border, detect_method, horizontal_only=True, img_shape=img.shape,
                             min_longest_liner_means_percentile=min_longest_liner_means_percentile,
                             min_longest_liner_extremes_percentile=min_longest_liner_extremes_percentile),
-        make_line_detection(left_border, hough, horizontal_only=False,
+        make_line_detection(left_border, detect_method, horizontal_only=False,
                             img_shape=img.shape,
                             min_longest_liner_means_percentile=min_longest_liner_means_percentile,
                             min_longest_liner_extremes_percentile=min_longest_liner_extremes_percentile),
-        make_line_detection(right_border, hough, horizontal_only=False,
+        make_line_detection(right_border, detect_method, horizontal_only=False,
                             img_shape=img.shape,
                             min_longest_liner_means_percentile=min_longest_liner_means_percentile,
                             min_longest_liner_extremes_percentile=min_longest_liner_extremes_percentile)
@@ -275,7 +335,14 @@ def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_p
 
     for part, line in zip(parts, lines):
         part = plot_border_line(line, part)
+    # lines = np.squeeze(lines)
+    # parts[0] = copy(plot_intersect(lines[0], lines[2], parts[0]))
+    # parts[0] = copy(plot_intersect(lines[0], lines[3], parts[0]))
+    # parts[1] = (plot_intersect(lines[1], lines[2], parts[1]))
+    # parts[1] = plot_intersect(lines[1], lines[3], parts[1])
+
 
     if out_dir_path[-1] != "/" or out_dir_path[-2] != '"\\':
         out_dir_path += "/"
+    print("img:", input_picture_path, "done.")
     cv2.imwrite(out_dir_path + image_name, cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
