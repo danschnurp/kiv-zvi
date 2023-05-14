@@ -6,6 +6,7 @@ from copy import copy
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from numpy.linalg import det
 from skimage.filters import threshold_sauvola
 from skimage.transform import probabilistic_hough_line, hough_line, hough_line_peaks
 
@@ -155,17 +156,19 @@ def hough_classic(border, horizontal=2):
     return lines
 
 
-def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
-    m1 = (y2 - y1) / (x2 - x1)
-    m2 = (y4 - y3) / (x4 - x3)
+def intersect(line1, line2):
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
-    b1 = y1 - m1 * x1
-    b2 = y3 - m2 * x3
+    div = det((xdiff, ydiff))
+    if div == 0:
+       return -50, -50
 
-    x_intersect = (b2 - b1) / (m1 - m2)
-    y_intersect = m1 * x_intersect + b1
+    d = (det(line1), det(line2))
+    x = det((d, xdiff)) / div
+    y = det((d, ydiff)) / div
+    return int(x), int(y)
 
-    return int(abs(x_intersect)), int(abs(y_intersect))
 
 
 def plot_border_line(longest_lines, border):
@@ -181,13 +184,15 @@ def plot_border_line(longest_lines, border):
 
 
 def plot_intersect(line_to_draw, line_to_draw2, border):
-    intersect = intersection(
-        line_to_draw2[0], line_to_draw2[2], line_to_draw2[1], line_to_draw2[3],
-        line_to_draw[0], line_to_draw[2], line_to_draw[1], line_to_draw[3],
+    line_to_draw2 = [line_to_draw2[:2], line_to_draw2[2:]]
+    line_to_draw = [line_to_draw[:2], line_to_draw[2:]]
+    interse = intersect(
+        line_to_draw2,
+        line_to_draw
                              )
-    if not np.isnan(intersect[0]):
-        print("plot_intersect", intersect)
-        border = cv2.circle(border, intersect, 50, (0, 255, 0), thickness=20)
+
+    print("plot_intersect", interse)
+    border = cv2.circle(border, interse, 50, (0, 255, 0), thickness=20)
     return border
 
 
@@ -335,12 +340,15 @@ def main(image_name, input_picture_path, out_dir_path, min_longest_liner_means_p
 
     for part, line in zip(parts, lines):
         part = plot_border_line(line, part)
-    # lines = np.squeeze(lines)
-    # parts[0] = copy(plot_intersect(lines[0], lines[2], parts[0]))
-    # parts[0] = copy(plot_intersect(lines[0], lines[3], parts[0]))
-    # parts[1] = (plot_intersect(lines[1], lines[2], parts[1]))
-    # parts[1] = plot_intersect(lines[1], lines[3], parts[1])
-
+    lines = np.squeeze(lines)
+    # top left
+    parts[0] = plot_intersect(lines[0], lines[2], parts[0])
+    # bottom left
+    parts[1] = plot_intersect(lines[1], lines[2], parts[1])
+    # top right
+    parts[3] = plot_intersect(lines[0], lines[3], parts[3])
+    # bottom right
+    img[bottom_border:, right_border:] = plot_intersect(lines[1], lines[3], img[bottom_border:, right_border:])
 
     if out_dir_path[-1] != "/" or out_dir_path[-2] != '"\\':
         out_dir_path += "/"
